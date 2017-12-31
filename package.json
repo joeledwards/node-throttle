@@ -1,0 +1,30 @@
+{
+  "name": "@buzuli/throttle",
+  "version": "1.0.0",
+  "description": "Report function throttler for enforcing delays between reports.",
+  "main": "lib/throttle.js",
+  "scripts": {
+    "lint": "standard",
+    "lint:fix": "standard --fix",
+    "test": "nyc tap test/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joeledwards/node-throttle.git"
+  },
+  "keywords": [
+    "throttle",
+    "report"
+  ],
+  "author": "Joel Edwards <joeledwards@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/joeledwards/node-throttle/issues"
+  },
+  "homepage": "https://github.com/joeledwards/node-throttle#readme",
+  "devDependencies": {
+    "nyc": "^11.4.1",
+    "standard": "^10.0.3",
+    "tap": "^11.0.1"
+  }
+}
