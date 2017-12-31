@@ -32,7 +32,86 @@ function throttleTest ({minDelay, maxDelay}) {
   return {notify, ...options}
 }
 
-tap.test('throttle', t => {
+tap.test('should not call timer if no maxDelay and no notifications', t => {
+  const {notify, reportFunc, timerFunc, nowFunc} = throttleTest({
+    minDelay: 1,
+    maxDelay: null
+  })
+
+  t.equal(timerFunc.callCount, 0)
+
+  nowFunc.inner = () => 1
+  notify()
+  t.equal(reportFunc.callCount, 1)
+  t.equal(timerFunc.callCount, 0)
+
+  notify()
+  t.equal(reportFunc.callCount, 1)
+  t.equal(timerFunc.callCount, 1)
+
+  t.done()
+})
+
+tap.test('when maxDelay < minDelay, minDelay will be used', t => {
+  const {notify, reportFunc, timerFunc, nowFunc} = throttleTest({
+    minDelay: 3,
+    maxDelay: 2
+  })
+
+  t.equal(timerFunc.callCount, 1)
+  t.equal(timerFunc.args[0], 3)
+
+  t.done()
+})
+
+tap.test('should set timer from maxDelay when there are no notifications', t => {
+  const {notify, reportFunc, timerFunc, nowFunc} = throttleTest({
+    minDelay: 1,
+    maxDelay: 2
+  })
+
+  t.equal(reportFunc.callCount, 0)
+  t.equal(timerFunc.callCount, 1)
+  t.equal(timerFunc.args[0], 2)
+
+  t.done()
+})
+
+tap.test('should set timer from minDelay when there is at least one notification', t => {
+  const {notify, reportFunc, timerFunc, nowFunc} = throttleTest({
+    minDelay: 1,
+    maxDelay: 2
+  })
+
+  t.equal(timerFunc.callCount, 1)
+
+  notify()
+  t.equal(reportFunc.callCount, 0)
+  t.equal(timerFunc.callCount, 2)
+  t.equal(timerFunc.args[0], 1)
+
+  t.done()
+})
+
+tap.test('should set timer to remainder of minDelay when there are notifications', t => {
+  const {notify, reportFunc, timerFunc, nowFunc} = throttleTest({
+    minDelay: 5,
+    maxDelay: 10 
+  })
+
+  t.equal(timerFunc.callCount, 1)
+  t.equal(timerFunc.args[0], 10)
+  nowFunc.inner = () => 2
+
+  notify()
+  t.equal(reportFunc.callCount, 0)
+  t.equal(timerFunc.callCount, 2)
+  t.equal(timerFunc.args[0], 3)
+
+  t.done()
+})
+
+tap.test('a lengthy sequence of throttle interactions', t => {
   const {notify, reportFunc, timerFunc, nowFunc} = throttleTest({
     minDelay: 1,
     maxDelay: 2
