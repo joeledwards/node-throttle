@@ -22,22 +22,22 @@ The throttle package exports the function (aliased `throttle`). This function ac
 
 ## options
 * `reportFunc` - the report function which will be run at the `maxDelay` interval
-** type is `function`
-** default is `undefined`
-** if `undefined` or `null`, it is a no-op not an error
-** may be replaced at any time using the `notify` function
+  * type is `function`
+  * default is `undefined`
+  * if `undefined` or `null`, it is a no-op not an error
+  * may be replaced at any time using the `notify` function
 * `minDelay` - reports will never run more frequently than this
-** type is `number`
-** units is milliseconds
-** default is `1000`
-** if `undefined` or `null`, the default value is used
+  * type is `number`
+  * units is milliseconds
+  * default is `1000`
+  * if `undefined` or `null`, the default value is used
 * `maxDelay` - reports will be forced at this frequency
-** type is `number`
-** units is milliseconds
-** default is `5000`
-** if `undefined`, the default value is used
-** if `null` or `<= 0`, then reports will only run when triggered by a notifier event
-** if `< minDelay`, the value of `minDelay` will be used in its stead
+  * type is `number`
+  * units is milliseconds
+  * default is `5000`
+  * if `undefined`, the default value is used
+  * if `null` or `<= 0`, then reports will only run when triggered by a notifier event
+  * if `< minDelay`, the value of `minDelay` will be used in its stead
 
 ## notify([reportFunc])
 
