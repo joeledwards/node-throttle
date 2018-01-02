@@ -18,13 +18,31 @@ function observer (inner) {
   return obs
 }
 
-function throttleTest ({minDelay, maxDelay}) {
+function nullableArg (arg, defaultArg) {
+  if (arg === null) {
+    return
+  }
+
+  if (arg === undefined) {
+    return defaultArg
+  }
+
+  return arg
+}
+
+function throttleTest ({
+  minDelay,
+  maxDelay,
+  reportFunc,
+  nowFunc,
+  timerFunc
+}) {
   const options = {
     minDelay,
     maxDelay,
-    reportFunc: observer(),
-    nowFunc: observer(() => 0),
-    timerFunc: observer()
+    reportFunc: nullableArg(reportFunc, observer()),
+    nowFunc: nullableArg(nowFunc, observer(() => 0)),
+    timerFunc: nullableArg(timerFunc, observer(() => () => {}))
   }
 
   const notify = throttle(options)
@@ -32,7 +50,7 @@ function throttleTest ({minDelay, maxDelay}) {
   return {notify, ...options}
 }
 
-tap.test('should not call timer if no maxDelay and no notifications', t => {
+tap.test('should not call timer if maxDelay = null and no notifications', t => {
   const {notify, reportFunc, timerFunc, nowFunc} = throttleTest({
     minDelay: 1,
     maxDelay: null
@@ -52,8 +70,68 @@ tap.test('should not call timer if no maxDelay and no notifications', t => {
   t.done()
 })
 
-tap.test('when maxDelay < minDelay, minDelay will be used', t => {
+tap.test('maxDelay should be set to default when not supplied', t => {
+  const {reportFunc, timerFunc} = throttleTest({
+    minDelay: 1
+  })
+
+  t.equal(reportFunc.callCount, 0)
+  t.equal(timerFunc.callCount, 1)
+  t.equal(timerFunc.args[0], 5000)
+
+  t.done()
+})
+tap.test('minDelay should be set to default when not supplied', t => {
   const {notify, reportFunc, timerFunc, nowFunc} = throttleTest({
+    maxDelay: 2000
+  })
+
+  t.equal(reportFunc.callCount, 0)
+  t.equal(timerFunc.callCount, 1)
+  t.equal(timerFunc.args[0], 2000)
+
+  nowFunc.inner = () => 200
+  notify()
+  t.equal(reportFunc.callCount, 0)
+  t.equal(timerFunc.callCount, 2)
+  t.equal(timerFunc.args[0], 800)
+
+  nowFunc.inner = () => 500
+  notify()
+  t.equal(reportFunc.callCount, 0)
+  t.equal(timerFunc.callCount, 3)
+  t.equal(timerFunc.args[0], 500)
+
+  t.done()
+})
+
+tap.test('minDelay should be set to default when null', t => {
+  const {notify, reportFunc, timerFunc, nowFunc} = throttleTest({
+    minDelay: null,
+    maxDelay: 2000
+  })
+
+  t.equal(reportFunc.callCount, 0)
+  t.equal(timerFunc.callCount, 1)
+  t.equal(timerFunc.args[0], 2000)
+
+  nowFunc.inner = () => 200
+  notify()
+  t.equal(reportFunc.callCount, 0)
+  t.equal(timerFunc.callCount, 2)
+  t.equal(timerFunc.args[0], 800)
+
+  nowFunc.inner = () => 500
+  notify()
+  t.equal(reportFunc.callCount, 0)
+  t.equal(timerFunc.callCount, 3)
+  t.equal(timerFunc.args[0], 500)
+
+  t.done()
+})
+
+tap.test('when maxDelay < minDelay, minDelay will be used', t => {
+  const {timerFunc} = throttleTest({
     minDelay: 3,
     maxDelay: 2
   })
@@ -65,7 +143,7 @@ tap.test('when maxDelay < minDelay, minDelay will be used', t => {
 })
 
 tap.test('should set timer from maxDelay when there are no notifications', t => {
-  const {notify, reportFunc, timerFunc, nowFunc} = throttleTest({
+  const {reportFunc, timerFunc} = throttleTest({
     minDelay: 1,
     maxDelay: 2
   })
@@ -78,7 +156,7 @@ tap.test('should set timer from maxDelay when there are no notifications', t => 
 })
 
 tap.test('should set timer from minDelay when there is at least one notification', t => {
-  const {notify, reportFunc, timerFunc, nowFunc} = throttleTest({
+  const {notify, reportFunc, timerFunc} = throttleTest({
     minDelay: 1,
     maxDelay: 2
   })
@@ -93,10 +171,29 @@ tap.test('should set timer from minDelay when there is at least one notification
   t.done()
 })
 
+tap.test('timer should be reset after timer function is invoked', t => {
+  const {reportFunc, timerFunc, nowFunc} = throttleTest({
+    minDelay: 5,
+    maxDelay: 10
+  })
+
+  t.equal(reportFunc.callCount, 0)
+  t.equal(timerFunc.callCount, 1)
+  t.equal(timerFunc.args[0], 10)
+
+  nowFunc.inner = () => 5
+  timerFunc.args[1]()
+  t.equal(reportFunc.callCount, 1)
+  t.equal(timerFunc.callCount, 2)
+  t.equal(timerFunc.args[0], 10)
+
+  t.done()
+})
+
 tap.test('should set timer to remainder of minDelay when there are notifications', t => {
   const {notify, reportFunc, timerFunc, nowFunc} = throttleTest({
     minDelay: 5,
-    maxDelay: 10 
+    maxDelay: 10
   })
 
   t.equal(timerFunc.callCount, 1)
@@ -110,6 +207,54 @@ tap.test('should set timer to remainder of minDelay when there are notifications
 
   t.done()
 })
+
+tap.test('a replacement report function can be supplied to notify', t => {
+  const reporterA = observer()
+  const reporterB = observer()
+  const {notify, nowFunc} = throttleTest({
+    minDelay: 1,
+    maxDelay: 2,
+    reportFunc: reporterA
+  })
+
+  t.equal(reporterA.callCount, 0)
+  t.equal(reporterB.callCount, 0)
+
+  nowFunc.inner = () => 1
+  notify()
+  t.equal(reporterA.callCount, 1)
+  t.equal(reporterB.callCount, 0)
+
+  nowFunc.inner = () => 2
+  notify(reporterB)
+  t.equal(reporterA.callCount, 1)
+  t.equal(reporterB.callCount, 1)
+
+  nowFunc.inner = () => 3
+  notify()
+  t.equal(reporterA.callCount, 1)
+  t.equal(reporterB.callCount, 2)
+
+  t.done()
+})
+
+/*
+tap.test('using the default timer',  t => {
+  const {notify} = throttleTest({
+    minDelay: 1,
+    maxDelay: 0,
+    reportFunc: () => t.done(),
+    timerFunc: null
+  })
+
+  // TODO: figure out how to make this run to completion when using the default function
+  // TODO; determine if this is will require a function for halting each throttle
+
+  notify()
+
+  t.done()
+})
+// */
 
 tap.test('a lengthy sequence of throttle interactions', t => {
   const {notify, reportFunc, timerFunc, nowFunc} = throttleTest({
