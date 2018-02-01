@@ -1,5 +1,9 @@
 # throttle
 
+[![Build Status][travis-image]][travis-url]
+[![NPM version][npm-image]][npm-url]
+
+
 Controls the frequency at which a report function is called.
 
 ## Installation
@@ -54,3 +58,8 @@ If `reportFunc` is a function, it will replace the report function for this and 
 If `force` is true, the report will be run, even if the time elapsed since the last run is less than `minDelay`.
 
 If `halt` is true, the next notification will not be scheduled, permitting the process to halt.
+
+[travis-url]: https://travis-ci.org/joeledwards/node-throttle
+[travis-image]: https://img.shields.io/travis/joeledwards/node-throttle/master.svg
+[npm-url]: https://www.npmjs.com/package/@buzuli/throttle
+[npm-image]: https://img.shields.io/npm/v/@buzuli/throttle.svg
