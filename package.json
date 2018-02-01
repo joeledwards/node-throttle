@@ -1,6 +1,6 @@
 {
   "name": "@buzuli/throttle",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Report function throttler for enforcing delays between reports.",
   "main": "lib/throttle.js",
   "scripts": {
