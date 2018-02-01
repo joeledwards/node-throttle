@@ -226,7 +226,7 @@ tap.test('a replacement report function can be supplied to notify', t => {
   t.equal(reporterB.callCount, 0)
 
   nowFunc.inner = () => 2
-  notify(reporterB)
+  notify({reportFunc: reporterB})
   t.equal(reporterA.callCount, 1)
   t.equal(reporterB.callCount, 1)
 
@@ -238,23 +238,21 @@ tap.test('a replacement report function can be supplied to notify', t => {
   t.done()
 })
 
-/*
-tap.test('using the default timer',  t => {
-  const {notify} = throttleTest({
-    minDelay: 1,
+tap.test('should be able to halt when default timer',  t => {
+  const {reportFunc, notify} = throttleTest({
+    minDelay: 100,
     maxDelay: 0,
-    reportFunc: () => t.done(),
     timerFunc: null
   })
 
-  // TODO: figure out how to make this run to completion when using the default function
-  // TODO; determine if this is will require a function for halting each throttle
+  notify({force: true})
+  t.equal(reportFunc.callCount, 1)
 
-  notify()
+  notify({halt: true})
+  t.equal(reportFunc.callCount, 1)
 
   t.done()
 })
-// */
 
 tap.test('a lengthy sequence of throttle interactions', t => {
   const {notify, reportFunc, timerFunc, nowFunc} = throttleTest({
@@ -290,6 +288,35 @@ tap.test('a lengthy sequence of throttle interactions', t => {
   notify()
   t.equal(reportFunc.callCount, 2)
   t.equal(reportFunc.args[0], 4)
+
+  t.done()
+})
+
+tap.test('force should trigger a report early', t => {
+  const {notify, reportFunc, timerFunc, nowFunc} = throttleTest({
+    minDelay: 1,
+    maxDelay: 2
+  })
+
+  t.equal(reportFunc.callCount, 0)
+  t.equal(nowFunc.result, 0)
+  t.equal(timerFunc.callCount, 1)
+  t.equal(timerFunc.args[0], 2)
+
+  notify({force: true})
+  t.equal(reportFunc.callCount, 1)
+  t.equal(reportFunc.args[0], 1)
+  t.equal(nowFunc.result, 0)
+  t.equal(timerFunc.callCount, 2)
+  t.equal(timerFunc.args[0], 2)
+
+  nowFunc.inner = () => 1
+  notify()
+  t.equal(reportFunc.callCount, 2)
+  t.equal(reportFunc.args[0], 1)
+  t.equal(nowFunc.result, 1)
+  t.equal(timerFunc.callCount, 3)
+  t.equal(timerFunc.args[0], 2)
 
   t.done()
 })
