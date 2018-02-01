@@ -39,7 +39,7 @@ The throttle package exports the function (aliased `throttle`). This function ac
   * if `null` or `<= 0`, then reports will only run when triggered by a notifier event
   * if `< minDelay`, the value of `minDelay` will be used in its stead
 
-### notify([reportFunc])
+### notify({reportFunc, force, halt})
 
 The notifier function causes the internal notification count to increase, and will cause the report function to be run if `minDelay` has been met.
 
@@ -49,4 +49,8 @@ If `maxDelay` is `null` or `<= 0` and the notify function has NOT been called, t
 
 If `maxDelay` is `null` or `<= 0` and the notify function HAS been called, then a report will either be run (if time since last reports `> minDelay`) or will be schedule to run in `reportDelay = minDelay - (now - lastReport)`.
 
-If `reportFunc` is supplied, it will replace the report function for this and all further reports.
+If `reportFunc` is a function, it will replace the report function for this and all further reports.
+
+If `force` is true, the report will be run, even if the time elapsed since the last run is less than `minDelay`.
+
+If `halt` is true, the next notification will not be scheduled, permitting the process to halt.
